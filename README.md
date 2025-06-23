@@ -39,7 +39,7 @@ Centralizar e padronizar a comunicação entre o front-end (`app-portal`) e o ba
 ---
 
 ## 📂 Estrutura do Projeto
-
+```text
 api-portal/
 ├── controllers/ # Lógica de negócio (ex: navios, metas, ocorrências)
 ├── models/ # Conexão e queries com o banco de dados
@@ -56,17 +56,15 @@ api-portal/
 ## ⚙️ Instalação
 
 1. **Clone o repositório:**
-**bash**
+```bash
 git clone https://github.com/ronneyrv/api-portal.git
 cd api-portal
 npm install
 
 ---
 
+```markdown
 ## 🌐 **Endpoints**
-
-**markdown**
-## 🌐 Endpoints
 
 A API segue o padrão REST. Alguns exemplos de rotas disponíveis:
 
