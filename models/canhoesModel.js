@@ -1,56 +1,53 @@
-const conexao = require("../infraestrutura/conexao");
+const { poolPromise, sql } = require("../infraestrutura/conexao");
 
 class canhoesModel {
-  listar() {
-    const sql = "SELECT id, can, modo, posicao FROM canhoes";
-    return new Promise((resolve, reject) => {
-      conexao.query(sql, (err, results) => {
-        if (err) {
-          console.error("Erro ao buscar canhões:", err);
-          reject(err);
-        }
-        resolve(results);
-      });
-    });
+  async listar() {
+    try {
+      const pool = await poolPromise;
+      const result = await pool.request().query("SELECT id, can, modo, posicao FROM canhoes");
+      return result.recordset;
+    } catch (err) {
+      console.error("Erro ao buscar canhões:", err);
+      throw err;
+    }
   }
 
-  atualizar(can, modo) {
-    return new Promise((resolve, reject) => {
-      const sql = "UPDATE canhoes SET modo = ? WHERE can = ?";
-
-      conexao.query(sql, [modo, can], (err, result) => {
-        if (err) {
-          return reject(err);
-        }
-        resolve(result);
-      });
-    });
+  async atualizar(can, modo) {
+    try {
+      const pool = await poolPromise;
+      const result = await pool.request()
+        .input("modo", sql.VarChar, modo)
+        .input("can", sql.Int, can)
+        .query("UPDATE canhoes SET modo = @modo WHERE can = @can");
+      return result;
+    } catch (err) {
+      console.error("Erro ao atualizar modo do canhão:", err);
+      throw err;
+    }
   }
 
-  modo() {
-    const sql = "SELECT * FROM statusHumectacao";
-    return new Promise((resolve, reject) => {
-      conexao.query(sql, (err, results) => {
-        if (err) {
-          console.error("Erro no status do sistema:", err);
-          reject(err);
-        }
-        resolve(results);
-      });
-    });
+  async modo() {
+    try {
+      const pool = await poolPromise;
+      const result = await pool.request().query("SELECT * FROM statusHumectacao");
+      return result.recordset;
+    } catch (err) {
+      console.error("Erro no status do sistema:", err);
+      throw err;
+    }
   }
 
-  atualizarModo(disponivel) {
-    return new Promise((resolve, reject) => {
-      const sql = "UPDATE statusHumectacao SET disponivel = ?";
-
-      conexao.query(sql, [disponivel], (err, result) => {
-        if (err) {
-          return reject(err);
-        }
-        resolve(result);
-      });
-    });
+  async atualizarModo(disponivel) {
+    try {
+      const pool = await poolPromise;
+      const result = await pool.request()
+        .input("disponivel", sql.Int, disponivel)
+        .query("UPDATE statusHumectacao SET disponivel = @disponivel");
+      return result;
+    } catch (err) {
+      console.error("Erro ao atualizar status de humectação:", err);
+      throw err;
+    }
   }
 }
 

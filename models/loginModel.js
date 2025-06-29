@@ -1,36 +1,36 @@
-const conexao = require("../infraestrutura/conexao");
+const { sql, poolPromise } = require("../infraestrutura/conexao");
 const bcrypt = require("bcrypt");
 
 class LoginModel {
   async autenticar(usuario, senha) {
-    const sql = "SELECT * FROM users WHERE usuario = ?";
+    try {
+      const pool = await poolPromise;
+      const result = await pool
+        .request()
+        .input("usuario", sql.VarChar, usuario)
+        .query("SELECT * FROM users WHERE usuario = @usuario");
 
-    return new Promise((resolve, reject) => {
-      conexao.query(sql, [usuario], async (err, results) => {
-        if (err) {
-          console.error("Erro na autenticação:", err);
-          return reject(new Error("Erro ao buscar usuários"));
-        }
+      if (result.recordset.length === 0) {
+        throw new Error("Usuário ou senha inválidos");
+      }
 
-        if (results.length === 0) {
-          return reject(new Error("Usuário ou senha inválidos"));
-        }
+      const user = result.recordset[0];
+      const senhaConfere = await bcrypt.compare(senha, user.senha);
 
-        const user = results[0];
-        const senhaConfere = await bcrypt.compare(senha, user.senha);
+      if (!senhaConfere) {
+        throw new Error("Usuário ou senha inválidos");
+      }
 
-        if (!senhaConfere) {
-          return reject(new Error("Usuário ou senha inválidos"));
-        }
-
-        resolve({
-          id: user.id,
-          email: user.email,
-          usuario: user.usuario,
-          nivel: user.nivel,
-        });
-      });
-    });
+      return {
+        id: user.id,
+        email: user.email,
+        usuario: user.usuario,
+        nivel: user.nivel,
+      };
+    } catch (error) {
+      console.error("Erro na autenticação:", error.message || error);
+      throw error;
+    }
   }
 }
 

@@ -1,31 +1,27 @@
-const conexao = require("../infraestrutura/conexao");
+const { poolPromise, sql } = require("../infraestrutura/conexao");
 
-class polimeroModel {
-  condicao() {
-    const sql = "SELECT * FROM statuspolimero";
-    return new Promise((resolve, reject) => {
-      conexao.query(sql, (err, results) => {
-        if (err) {
-          console.error("Erro ao verificar a condição do polímero:", err);
-          reject(err);
-        }
-        resolve(results);
-      });
-    });
+class PolimeroModel {
+  async condicao() {
+    try {
+      const pool = await poolPromise;
+      const result = await pool.request().query("SELECT * FROM statuspolimero");
+      return result.recordset;
+    } catch (err) {
+      console.error("Erro ao verificar a condição do polímero:", err);
+      throw err;
+    }
   }
 
-  volume() {
-    const sql = "SELECT * FROM volumePolimero";
-    return new Promise((resolve, reject) => {
-      conexao.query(sql, (err, results) => {
-        if (err) {
-          console.error("Erro ao verificar o volume de polímero:", err);
-          reject(err);
-        }
-        resolve(results);
-      });
-    });
+  async volume() {
+    try {
+      const pool = await poolPromise;
+      const result = await pool.request().query("SELECT * FROM volumePolimero");
+      return result.recordset;
+    } catch (err) {
+      console.error("Erro ao verificar o volume de polímero:", err);
+      throw err;
+    }
   }
-
 }
-module.exports = new polimeroModel();
+
+module.exports = new PolimeroModel();

@@ -1,111 +1,110 @@
-const conexao = require("../infraestrutura/conexao");
+const { poolPromise, sql } = require("../infraestrutura/conexao");
 
-class navioModel {
-  adicionar(dados) {
-    return new Promise((resolve, reject) => {
-      const sql =
-        "INSERT INTO descarregamento_navios (navio, cliente, atracacao1, inicio_op, arqueacao_inicial, atracado, finalizado) VALUES (?, ?, ?, ?, ?, ?, ?)";
+class NavioModel {
+  async adicionar(dados) {
+    const query = `
+      INSERT INTO descarregamento_navios
+      (navio, cliente, atracacao1, inicio_op, arqueacao_inicial, atracado, finalizado)
+      VALUES (@navio, @cliente, @atracacao1, @inicio_op, @arqueacao_inicial, @atracado, @finalizado)
+    `;
 
-      const values = [
-        dados.navio,
-        dados.cliente,
-        dados.atracacao1,
-        dados.inicio_op,
-        dados.arqueacao_inicial,
-        dados.atracado || 1,
-        dados.finalizado || 0,
-      ];
+    try {
+      const pool = await poolPromise;
+      const result = await pool.request()
+        .input('navio', sql.VarChar, dados.navio)
+        .input('cliente', sql.VarChar, dados.cliente)
+        .input('atracacao1', sql.DateTime, dados.atracacao1)
+        .input('inicio_op', sql.DateTime, dados.inicio_op)
+        .input('arqueacao_inicial', sql.Float, dados.arqueacao_inicial)
+        .input('atracado', sql.Bit, dados.atracado ?? 1)
+        .input('finalizado', sql.Bit, dados.finalizado ?? 0)
+        .query(query);
 
-      conexao.query(sql, values, (err, result) => {
-        if (err) {
-          console.error("Erro ao adicionar navio:", err);
-          return reject(err);
-        }
-        resolve(result);
-      });
-    });
+      return result;
+    } catch (err) {
+      console.error("Erro ao adicionar navio:", err);
+      throw err;
+    }
   }
 
-  listar() {
-    const sql = "SELECT * FROM descarregamento_navios";
-    return new Promise((resolve, reject) => {
-      conexao.query(sql, (err, result) => {
-        if (err) {
-          console.error("Erro ao listar Navios:", err);
-          reject(err);
-        }
-        resolve(result);
-      });
-    });
+  async listar() {
+    try {
+      const pool = await poolPromise;
+      const result = await pool.request().query("SELECT * FROM descarregamento_navios");
+      return result.recordset;
+    } catch (err) {
+      console.error("Erro ao listar Navios:", err);
+      throw err;
+    }
   }
 
-  buscar() {
-    const final = 0;
-
-    const sql = "SELECT * FROM descarregamento_navios WHERE finalizado = ?";
-    return new Promise((resolve, reject) => {
-      conexao.query(sql, [final], (err, result) => {
-        if (err) {
-          console.error("Erro ao buscar Navios:", err);
-          reject(err);
-        }
-        resolve(result);
-      });
-    });
+  async buscar() {
+    try {
+      const pool = await poolPromise;
+      const result = await pool.request()
+        .input("finalizado", sql.Bit, 0)
+        .query("SELECT * FROM descarregamento_navios WHERE finalizado = @finalizado");
+      return result.recordset;
+    } catch (err) {
+      console.error("Erro ao buscar Navios:", err);
+      throw err;
+    }
   }
 
-  listarNavio(id) {
-    const sql = "SELECT * FROM descarregamento_navios WHERE navio = ?";
-
-    return new Promise((resolve, reject) => {
-      conexao.query(sql, [id], (err, result) => {
-        if (err) {
-          console.error("Erro ao buscar Navio:", err);
-          reject(err);
-        }
-        resolve(result);
-      });
-    });
+  async listarNavio(id) {
+    try {
+      const pool = await poolPromise;
+      const result = await pool.request()
+        .input("navio", sql.VarChar, id)
+        .query("SELECT * FROM descarregamento_navios WHERE navio = @navio");
+      return result.recordset;
+    } catch (err) {
+      console.error("Erro ao buscar Navio:", err);
+      throw err;
+    }
   }
 
-  atualizar(dados, id) {
-    return new Promise((resolve, reject) => {
-      const sql =
-        "UPDATE timepptm SET nome = ?, funcao = ?, cargo = ?, setor = ?, equipe = ?, gestor = ?, email = ?, ativo = ? WHERE id = ?";
+  async atualizar(dados, id) {
+    const query = `
+      UPDATE timepptm
+      SET nome = @nome, funcao = @funcao, cargo = @cargo, setor = @setor,
+          equipe = @equipe, gestor = @gestor, email = @email, ativo = @ativo
+      WHERE id = @id
+    `;
 
-      const values = [
-        dados.nome,
-        dados.funcao,
-        dados.cargo,
-        dados.setor,
-        dados.equipe,
-        dados.gestor,
-        dados.email,
-        dados.ativo,
-      ];
+    try {
+      const pool = await poolPromise;
+      const result = await pool.request()
+        .input("nome", sql.VarChar, dados.nome)
+        .input("funcao", sql.VarChar, dados.funcao)
+        .input("cargo", sql.VarChar, dados.cargo)
+        .input("setor", sql.VarChar, dados.setor)
+        .input("equipe", sql.VarChar, dados.equipe)
+        .input("gestor", sql.VarChar, dados.gestor)
+        .input("email", sql.VarChar, dados.email)
+        .input("ativo", sql.Bit, dados.ativo)
+        .input("id", sql.Int, id)
+        .query(query);
 
-      conexao.query(sql, [values, id], (err, result) => {
-        if (err) {
-          return reject(err);
-        }
-        resolve(result);
-      });
-    });
+      return result;
+    } catch (err) {
+      console.error("Erro ao atualizar navio:", err);
+      throw err;
+    }
   }
 
-  pilhas() {
-    const sql = "SELECT * FROM descarregamento_navio_pilha WHERE volume > 0";
-
-    return new Promise((resolve, reject) => {
-      conexao.query(sql, (err, result) => {
-        if (err) {
-          console.error("Erro ao buscar Navio:", err);
-          reject(err);
-        }
-        resolve(result);
-      });
-    });
+  async pilhas() {
+    try {
+      const pool = await poolPromise;
+      const result = await pool.request().query(
+        "SELECT * FROM descarregamento_navio_pilha WHERE volume > 0"
+      );
+      return result.recordset;
+    } catch (err) {
+      console.error("Erro ao buscar pilhas:", err);
+      throw err;
+    }
   }
 }
 
-module.exports = new navioModel();
+module.exports = new NavioModel();

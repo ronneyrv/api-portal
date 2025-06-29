@@ -1,57 +1,55 @@
-const conexao = require("../infraestrutura/conexao");
+const { poolPromise, sql } = require("../infraestrutura/conexao");
 
-class observacaoModel {
-  listar() {
-    const sql = "SELECT * FROM obsRot";
-    return new Promise((resolve, reject) => {
-      conexao.query(sql, (err, results) => {
-        if (err) {
-          console.error("Erro ao buscar observações:", err);
-          reject(err);
-        }
-        resolve(results);
-      });
-    });
+class ObservacaoModel {
+  async listar() {
+    try {
+      const pool = await poolPromise;
+      const result = await pool.request().query("SELECT * FROM obsRot");
+      return result.recordset;
+    } catch (err) {
+      console.error("Erro ao buscar observações:", err);
+      throw err;
+    }
   }
 
-  atualizar(newObs, id) {
-    return new Promise((resolve, reject) => {
-      const sql = "UPDATE obsRot SET observacao = ? WHERE id = ?";
-
-      conexao.query(sql, [newObs, id], (err, result) => {
-        if (err) {
-          return reject(err);
-        }
-        resolve(result);
-      });
-    });
+  async atualizar(newObs, id) {
+    try {
+      const pool = await poolPromise;
+      const result = await pool.request()
+        .input("observacao", sql.VarChar, newObs)
+        .input("id", sql.Int, id)
+        .query("UPDATE obsRot SET observacao = @observacao WHERE id = @id");
+      return result;
+    } catch (err) {
+      console.error("Erro ao atualizar observação:", err);
+      throw err;
+    }
   }
 
-  listarEvento() {
-    const sql = "SELECT * FROM evento_andamento";
-    return new Promise((resolve, reject) => {
-      conexao.query(sql, (err, results) => {
-        if (err) {
-          console.error("Erro ao buscar evento:", err);
-          reject(err);
-        }
-        resolve(results);
-      });
-    });
+  async listarEvento() {
+    try {
+      const pool = await poolPromise;
+      const result = await pool.request().query("SELECT * FROM evento_andamento");
+      return result.recordset;
+    } catch (err) {
+      console.error("Erro ao buscar evento:", err);
+      throw err;
+    }
   }
 
-  atualizarEvento(newEvent, id) {
-    return new Promise((resolve, reject) => {
-      const sql = "UPDATE evento_andamento SET andamento = ? WHERE id = ?";
-
-      conexao.query(sql, [newEvent, id], (err, result) => {
-        if (err) {
-          return reject(err);
-        }
-        resolve(result);
-      });
-    });
+  async atualizarEvento(newEvent, id) {
+    try {
+      const pool = await poolPromise;
+      const result = await pool.request()
+        .input("andamento", sql.VarChar, newEvent)
+        .input("id", sql.Int, id)
+        .query("UPDATE evento_andamento SET andamento = @andamento WHERE id = @id");
+      return result;
+    } catch (err) {
+      console.error("Erro ao atualizar evento:", err);
+      throw err;
+    }
   }
 }
 
-module.exports = new observacaoModel();
+module.exports = new ObservacaoModel();

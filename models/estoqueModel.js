@@ -1,17 +1,18 @@
-const conexao = require("../infraestrutura/conexao");
+const { poolPromise, sql } = require("../infraestrutura/conexao");
 
-class estoqueModel {
-  listar() {
-    const sql = "SELECT * FROM estoque ORDER BY id DESC LIMIT 1";
-    return new Promise((resolve, reject) => {
-      conexao.query(sql, (err, result) => {
-        if (err) {
-          console.error("Erro ao buscar estoque:", err);
-          reject(err);
-        }
-        resolve(result);
-      });
-    });
+class EstoqueModel {
+  async listar() {
+    try {
+      const pool = await poolPromise;
+      const result = await pool.request().query(`
+        SELECT TOP 1 * FROM estoque ORDER BY id DESC
+      `);
+      return result.recordset;
+    } catch (err) {
+      console.error("Erro ao buscar estoque:", err);
+      throw err;
+    }
   }
 }
-module.exports = new estoqueModel();
+
+module.exports = new EstoqueModel();

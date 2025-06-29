@@ -1,77 +1,99 @@
-const conexao = require("../infraestrutura/conexao");
+const { poolPromise, sql } = require("../infraestrutura/conexao");
 
-class progRetomaModel {
-  listar(semana) {
-    const sql = "SELECT * FROM progRetoma WHERE semana = ?";
+class ProgRetomaModel {
+  async listar(semana) {
+    try {
+      const pool = await poolPromise;
+      const result = await pool
+        .request()
+        .input("semana", sql.VarChar, semana)
+        .query("SELECT * FROM progRetoma WHERE semana = @semana");
 
-    return new Promise((resolve, reject) => {
-      conexao.query(sql, [semana], (err, result) => {
-        if (err) {
-          console.error("Erro ao buscar programação:", err);
-          reject(err);
-        }
-        resolve(result);
-      });
-    });
+      return result.recordset;
+    } catch (err) {
+      console.error("Erro ao buscar programação:", err);
+      throw err;
+    }
   }
 
-  add(dados) {
-    const sql = `
-    INSERT INTO progretoma (
-      dia, semana,
-      maquina_ug1, pilha_ug1, navio_ug1, obs_ug1,
-      maquina_ug2, pilha_ug2, navio_ug2, obs_ug2,
-      maquina_ug3, pilha_ug3, navio_ug3, obs_ug3,
-      maquina_empilha, pilha_empilha, navio_empilha, obs_empilha
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      ON DUPLICATE KEY UPDATE
-      maquina_ug1 = VALUES(maquina_ug1),
-      pilha_ug1 = VALUES(pilha_ug1),
-      navio_ug1 = VALUES(navio_ug1),
-      obs_ug1 = VALUES(obs_ug1),
-      maquina_ug2 = VALUES(maquina_ug2),
-      pilha_ug2 = VALUES(pilha_ug2),
-      navio_ug2 = VALUES(navio_ug2),
-      obs_ug2 = VALUES(obs_ug2),
-      maquina_ug3 = VALUES(maquina_ug3),
-      pilha_ug3 = VALUES(pilha_ug3),
-      navio_ug3 = VALUES(navio_ug3),
-      obs_ug3 = VALUES(obs_ug3),
-      maquina_empilha = VALUES(maquina_empilha),
-      pilha_empilha = VALUES(pilha_empilha),
-      navio_empilha = VALUES(navio_empilha),
-      obs_empilha = VALUES(obs_empilha)
-      `;
-    return new Promise((resolve, reject) => {
-      const values = [
-        dados.dia,
-        dados.semana,
-        dados.maquina_ug1,
-        dados.pilha_ug1,
-        dados.navio_ug1,
-        dados.obs_ug1,
-        dados.maquina_ug2,
-        dados.pilha_ug2,
-        dados.navio_ug2,
-        dados.obs_ug2,
-        dados.maquina_ug3,
-        dados.pilha_ug3,
-        dados.navio_ug3,
-        dados.obs_ug3,
-        dados.maquina_empilha,
-        dados.pilha_empilha,
-        dados.navio_empilha,
-        dados.obs_empilha,
-      ];
+  async add(dados) {
+    try {
+      const pool = await poolPromise;
 
-      conexao.query(sql, values, (err, result) => {
-        if (err) {
-          console.error("Erro ao adicionar programação:", err);
-          return reject(err);
-        }
-        resolve(result);
-      });
-    });
+      // Verificar se já existe entrada para o mesmo dia e semana
+      const check = await pool
+        .request()
+        .input("dia", sql.VarChar, dados.dia)
+        .input("semana", sql.VarChar, dados.semana)
+        .query("SELECT id FROM progRetoma WHERE dia = @dia AND semana = @semana");
+
+      const request = pool.request()
+        .input("dia", sql.VarChar, dados.dia)
+        .input("semana", sql.VarChar, dados.semana)
+        .input("maquina_ug1", sql.VarChar, dados.maquina_ug1)
+        .input("pilha_ug1", sql.VarChar, dados.pilha_ug1)
+        .input("navio_ug1", sql.VarChar, dados.navio_ug1)
+        .input("obs_ug1", sql.VarChar, dados.obs_ug1)
+        .input("maquina_ug2", sql.VarChar, dados.maquina_ug2)
+        .input("pilha_ug2", sql.VarChar, dados.pilha_ug2)
+        .input("navio_ug2", sql.VarChar, dados.navio_ug2)
+        .input("obs_ug2", sql.VarChar, dados.obs_ug2)
+        .input("maquina_ug3", sql.VarChar, dados.maquina_ug3)
+        .input("pilha_ug3", sql.VarChar, dados.pilha_ug3)
+        .input("navio_ug3", sql.VarChar, dados.navio_ug3)
+        .input("obs_ug3", sql.VarChar, dados.obs_ug3)
+        .input("maquina_empilha", sql.VarChar, dados.maquina_empilha)
+        .input("pilha_empilha", sql.VarChar, dados.pilha_empilha)
+        .input("navio_empilha", sql.VarChar, dados.navio_empilha)
+        .input("obs_empilha", sql.VarChar, dados.obs_empilha);
+
+      if (check.recordset.length > 0) {
+        // Atualiza se já existir
+        const result = await request.query(`
+          UPDATE progRetoma SET
+            maquina_ug1 = @maquina_ug1,
+            pilha_ug1 = @pilha_ug1,
+            navio_ug1 = @navio_ug1,
+            obs_ug1 = @obs_ug1,
+            maquina_ug2 = @maquina_ug2,
+            pilha_ug2 = @pilha_ug2,
+            navio_ug2 = @navio_ug2,
+            obs_ug2 = @obs_ug2,
+            maquina_ug3 = @maquina_ug3,
+            pilha_ug3 = @pilha_ug3,
+            navio_ug3 = @navio_ug3,
+            obs_ug3 = @obs_ug3,
+            maquina_empilha = @maquina_empilha,
+            pilha_empilha = @pilha_empilha,
+            navio_empilha = @navio_empilha,
+            obs_empilha = @obs_empilha
+          WHERE dia = @dia AND semana = @semana
+        `);
+        return result;
+      } else {
+        // Insere se for novo
+        const result = await request.query(`
+          INSERT INTO progRetoma (
+            dia, semana,
+            maquina_ug1, pilha_ug1, navio_ug1, obs_ug1,
+            maquina_ug2, pilha_ug2, navio_ug2, obs_ug2,
+            maquina_ug3, pilha_ug3, navio_ug3, obs_ug3,
+            maquina_empilha, pilha_empilha, navio_empilha, obs_empilha
+          ) VALUES (
+            @dia, @semana,
+            @maquina_ug1, @pilha_ug1, @navio_ug1, @obs_ug1,
+            @maquina_ug2, @pilha_ug2, @navio_ug2, @obs_ug2,
+            @maquina_ug3, @pilha_ug3, @navio_ug3, @obs_ug3,
+            @maquina_empilha, @pilha_empilha, @navio_empilha, @obs_empilha
+          )
+        `);
+        return result;
+      }
+    } catch (err) {
+      console.error("Erro ao adicionar programação:", err);
+      throw err;
+    }
   }
 }
-module.exports = new progRetomaModel();
+
+module.exports = new ProgRetomaModel();

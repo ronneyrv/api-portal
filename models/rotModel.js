@@ -1,7 +1,7 @@
-const conexao = require("../infraestrutura/conexao");
+const { poolPromise, sql } = require("../infraestrutura/conexao");
 
 class RotModel {
-  armazenar(
+  async armazenar(
     data,
     turno,
     equipe,
@@ -19,72 +19,82 @@ class RotModel {
     eventos,
     eventos_andamento
   ) {
-    const sql = `
-      INSERT INTO relatorios_turno (
-        data, turno, equipe, elaborador, supervisao,
-        info_tcld, patio, patio_umectacao, patio_polimero, patio_polimero_vol, patio_obs,
-        valor_estoque, programacao, retoma_turno, eventos, eventos_andamento
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      ON DUPLICATE KEY UPDATE
-        equipe = VALUES(equipe),
-        elaborador = VALUES(elaborador),
-        supervisao = VALUES(supervisao),
-        info_tcld = VALUES(info_tcld),
-        patio = VALUES(patio),
-        patio_umectacao = VALUES(patio_umectacao),
-        patio_polimero = VALUES(patio_polimero),
-        patio_polimero_vol = VALUES(patio_polimero_vol),
-        patio_obs = VALUES(patio_obs),
-        valor_estoque = VALUES(valor_estoque),
-        programacao = VALUES(programacao),
-        retoma_turno = VALUES(retoma_turno),
-        eventos = VALUES(eventos),
-        eventos_andamento = VALUES(eventos_andamento)
-    `;
+    try {
+      const pool = await poolPromise;
 
-    return new Promise((resolve, reject) => {
-      const valores = [
-        data,
-        turno,
-        equipe,
-        elaborador,
-        supervisao,
-        JSON.stringify(info_tcld),
-        JSON.stringify(patio),
-        JSON.stringify(patio_umectacao),
-        JSON.stringify(patio_polimero),
-        JSON.stringify(patio_polimero_vol),
-        patio_obs,
-        JSON.stringify(valor_estoque),
-        JSON.stringify(programacao),
-        JSON.stringify(retoma_turno),
-        JSON.stringify(eventos),
-        eventos_andamento,
-      ];
+      const request = pool.request()
+        .input("data", sql.VarChar, data)
+        .input("turno", sql.VarChar, turno)
+        .input("equipe", sql.VarChar, equipe)
+        .input("elaborador", sql.VarChar, elaborador)
+        .input("supervisao", sql.VarChar, supervisao)
+        .input("info_tcld", sql.NVarChar(sql.MAX), JSON.stringify(info_tcld))
+        .input("patio", sql.NVarChar(sql.MAX), JSON.stringify(patio))
+        .input("patio_umectacao", sql.NVarChar(sql.MAX), JSON.stringify(patio_umectacao))
+        .input("patio_polimero", sql.NVarChar(sql.MAX), JSON.stringify(patio_polimero))
+        .input("patio_polimero_vol", sql.NVarChar(sql.MAX), JSON.stringify(patio_polimero_vol))
+        .input("patio_obs", sql.NVarChar(sql.MAX), patio_obs)
+        .input("valor_estoque", sql.NVarChar(sql.MAX), JSON.stringify(valor_estoque))
+        .input("programacao", sql.NVarChar(sql.MAX), JSON.stringify(programacao))
+        .input("retoma_turno", sql.NVarChar(sql.MAX), JSON.stringify(retoma_turno))
+        .input("eventos", sql.NVarChar(sql.MAX), JSON.stringify(eventos))
+        .input("eventos_andamento", sql.NVarChar(sql.MAX), eventos_andamento);
 
-      conexao.query(sql, valores, (err, result) => {
-        if (err) {
-          console.error("Erro ao salvar relatório:", err);
-          return reject(err);
-        }
-        resolve(result);
-      });
-    });
+      const sqlMerge = `
+        MERGE relatorios_turno AS target
+        USING (SELECT @data AS data, @turno AS turno) AS source
+        ON (target.data = source.data AND target.turno = source.turno)
+        WHEN MATCHED THEN
+          UPDATE SET
+            equipe = @equipe,
+            elaborador = @elaborador,
+            supervisao = @supervisao,
+            info_tcld = @info_tcld,
+            patio = @patio,
+            patio_umectacao = @patio_umectacao,
+            patio_polimero = @patio_polimero,
+            patio_polimero_vol = @patio_polimero_vol,
+            patio_obs = @patio_obs,
+            valor_estoque = @valor_estoque,
+            programacao = @programacao,
+            retoma_turno = @retoma_turno,
+            eventos = @eventos,
+            eventos_andamento = @eventos_andamento
+        WHEN NOT MATCHED THEN
+          INSERT (
+            data, turno, equipe, elaborador, supervisao,
+            info_tcld, patio, patio_umectacao, patio_polimero, patio_polimero_vol,
+            patio_obs, valor_estoque, programacao, retoma_turno, eventos, eventos_andamento
+          )
+          VALUES (
+            @data, @turno, @equipe, @elaborador, @supervisao,
+            @info_tcld, @patio, @patio_umectacao, @patio_polimero, @patio_polimero_vol,
+            @patio_obs, @valor_estoque, @programacao, @retoma_turno, @eventos, @eventos_andamento
+          );
+      `;
+
+      const result = await request.query(sqlMerge);
+      return result;
+    } catch (err) {
+      console.error("Erro ao salvar relatório:", err);
+      throw err;
+    }
   }
 
-  buscar(data, turno) {
-    const sql = "SELECT * FROM relatorios_turno WHERE data = ? AND turno = ?";
+  async buscar(data, turno) {
+    try {
+      const pool = await poolPromise;
+      const result = await pool
+        .request()
+        .input("data", sql.VarChar, data)
+        .input("turno", sql.VarChar, turno)
+        .query("SELECT * FROM relatorios_turno WHERE data = @data AND turno = @turno");
 
-    return new Promise((resolve, reject) => {
-      conexao.query(sql, [data, turno], async (err, result) => {
-        if (err) {
-          console.error("Erro ao buscar Rot:", err);
-          reject(err);
-        }
-        resolve(result);
-      });
-    });
+      return result.recordset;
+    } catch (err) {
+      console.error("Erro ao buscar Rot:", err);
+      throw err;
+    }
   }
 }
 

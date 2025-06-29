@@ -1,68 +1,71 @@
-const conexao = require("../infraestrutura/conexao");
+const { poolPromise, sql } = require("../infraestrutura/conexao");
 
 class equipeModel {
-  listar() {
-    const sql = "SELECT * FROM timepptm";
-    return new Promise((resolve, reject) => {
-      conexao.query(sql, (err, result) => {
-        if (err) {
-          console.error("Erro ao listar equipe:", err);
-          reject(err);
-        }
-        resolve(result);
-      });
-    });
+  async listar() {
+    try {
+      const pool = await poolPromise;
+      const result = await pool.request().query("SELECT * FROM timepptm");
+      return result.recordset;
+    } catch (err) {
+      console.error("Erro ao listar equipe:", err);
+      throw err;
+    }
   }
 
-  criar(dados) {
-    return new Promise((resolve, reject) => {
-      const sql = "INSERT INTO timepptm (nome, funcao, cargo, setor, equipe, gestor, email, ativo) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-
-      const values = [
-        dados.nome,
-        dados.funcao,
-        dados.cargo,
-        dados.setor,
-        dados.equipe,
-        dados.gestor,
-        dados.email,
-        dados.ativo,
-      ];
-
-      conexao.query(sql, values, (err, result) => {
-        if (err) {
-          console.error("Erro ao adicionar colaborador:", err);
-          return reject(err);
-        }
-        resolve(result);
-      });
-    });
+  async criar(dados) {
+    try {
+      const pool = await poolPromise;
+      const result = await pool.request()
+        .input("nome", sql.VarChar, dados.nome)
+        .input("funcao", sql.VarChar, dados.funcao)
+        .input("cargo", sql.VarChar, dados.cargo)
+        .input("setor", sql.VarChar, dados.setor)
+        .input("equipe", sql.VarChar, dados.equipe)
+        .input("gestor", sql.VarChar, dados.gestor)
+        .input("email", sql.VarChar, dados.email)
+        .input("ativo", sql.Bit, dados.ativo)
+        .query(`
+          INSERT INTO timepptm (nome, funcao, cargo, setor, equipe, gestor, email, ativo)
+          VALUES (@nome, @funcao, @cargo, @setor, @equipe, @gestor, @email, @ativo)
+        `);
+      return result;
+    } catch (err) {
+      console.error("Erro ao adicionar colaborador:", err);
+      throw err;
+    }
   }
 
-  atualizar(dados, id) {
-    return new Promise((resolve, reject) => {
-      const sql = "UPDATE timepptm SET nome = ?, funcao = ?, cargo = ?, setor = ?, equipe = ?, gestor = ?, email = ?, ativo = ? WHERE id = ?";
-
-      const values = [
-        dados.nome,
-        dados.funcao,
-        dados.cargo,
-        dados.setor,
-        dados.equipe,
-        dados.gestor,
-        dados.email,
-        dados.ativo,
-      ];
-
-      conexao.query(sql, [values, id], (err, result) => {
-        if (err) {
-          return reject(err);
-        }
-        resolve(result);
-      });
-    });
+  async atualizar(dados, id) {
+    try {
+      const pool = await poolPromise;
+      const result = await pool.request()
+        .input("id", sql.Int, id)
+        .input("nome", sql.VarChar, dados.nome)
+        .input("funcao", sql.VarChar, dados.funcao)
+        .input("cargo", sql.VarChar, dados.cargo)
+        .input("setor", sql.VarChar, dados.setor)
+        .input("equipe", sql.VarChar, dados.equipe)
+        .input("gestor", sql.VarChar, dados.gestor)
+        .input("email", sql.VarChar, dados.email)
+        .input("ativo", sql.Bit, dados.ativo)
+        .query(`
+          UPDATE timepptm
+          SET nome = @nome,
+              funcao = @funcao,
+              cargo = @cargo,
+              setor = @setor,
+              equipe = @equipe,
+              gestor = @gestor,
+              email = @email,
+              ativo = @ativo
+          WHERE id = @id
+        `);
+      return result;
+    } catch (err) {
+      console.error("Erro ao atualizar colaborador:", err);
+      throw err;
+    }
   }
-
 }
 
 module.exports = new equipeModel();

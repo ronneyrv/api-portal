@@ -5,7 +5,7 @@ const cors = require("cors");
 require("dotenv").config();
 
 const app = express();
-const port = process.env.PORT;
+const port = process.env.PORT || 3000;
 
 const router = require("./routers");
 
@@ -34,7 +34,6 @@ app.use(
 );
 
 router(app, express);
-
-app.listen(port, () => {
-  console.log(`Servidor rodando em http://localhost:${port}`);
+app.listen(port, '0.0.0.0', () => {
+  console.log(`Servidor rodando em http://172.20.229.55:${port}`);
 });
