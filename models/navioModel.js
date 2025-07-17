@@ -38,6 +38,49 @@ class NavioModel {
     }
   }
 
+ async previsaoFim() {
+  try {
+    const pool = await poolPromise;
+    const navios = await pool.request()
+      .input("finalizado", sql.Bit, 0)
+      .query("SELECT id, atracacao, saldo, taxa FROM descarregamento_navios WHERE finalizado = @finalizado");
+
+    for (const navio of navios.recordset) {
+      const atracacao = new Date(navio.atracacao);
+      const agora = new Date();
+      const diffMs = agora - atracacao;
+      const diffDias = diffMs / (1000 * 60 * 60 * 24); // ms → dias
+
+      const diasCalculado = diffDias + (navio.saldo / navio.taxa);
+      const diasFinal = Math.round(diasCalculado * 10) / 10;
+console.log(agora)
+      await pool.request()
+        .input("dias", sql.Decimal(3, 1), diasFinal)
+        .input("id", sql.Int, navio.id)
+        .query("UPDATE descarregamento_navios SET dias = @dias WHERE id = @id");
+    }
+
+    return true;
+
+  } catch (err) {
+    console.error("Erro ao atualizar previsão:", err);
+    throw err;
+  }
+}
+
+  async pilhas() {
+    try {
+      const pool = await poolPromise;
+      const result = await pool.request().query(
+        "SELECT * FROM descarregamento_navio_pilha WHERE volume > 0"
+      );
+      return result.recordset;
+    } catch (err) {
+      console.error("Erro ao buscar pilhas:", err);
+      throw err;
+    }
+  }
+  
   async buscar() {
     try {
       const pool = await poolPromise;
@@ -89,19 +132,6 @@ class NavioModel {
       return result;
     } catch (err) {
       console.error("Erro ao atualizar navio:", err);
-      throw err;
-    }
-  }
-
-  async pilhas() {
-    try {
-      const pool = await poolPromise;
-      const result = await pool.request().query(
-        "SELECT * FROM descarregamento_navio_pilha WHERE volume > 0"
-      );
-      return result.recordset;
-    } catch (err) {
-      console.error("Erro ao buscar pilhas:", err);
       throw err;
     }
   }

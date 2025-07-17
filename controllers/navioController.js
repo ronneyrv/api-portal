@@ -51,6 +51,42 @@ class NavioController {
       );
   }
 
+  previsaoFim(req, res) {
+    navioModel
+      .previsaoFim()
+      .then(() =>
+        res.status(200).json({
+          type: "success",
+          message: "Previsão de término atualizada com sucesso",
+        })
+      )
+      .catch((error) => {
+        console.error("Erro ao atualizar previsão:", error.message || error);
+        res.status(500).json({
+          type: "error",
+          message: error.message || "Erro ao atualizar previsão",
+        });
+      });
+  }
+
+  pilhas(req, res) {
+    navioModel
+      .pilhas()
+      .then((pilhas) => {
+        res.status(200).json({
+          type: "success",
+          data: pilhas,
+        });
+      })
+      .catch((error) => {
+        res.status(500).json({
+          type: "error",
+          message: "Erro ao buscar pilhas",
+          error: error.message,
+        });
+      });
+  }
+
   buscar(req, res) {
     navioModel
       .buscar()
@@ -112,7 +148,8 @@ class NavioController {
 
   atualizar(req, res) {
     const { dados } = req.body;
-    const { id } = req.params;
+    const { inavio } = req.params;
+    //atualizar os dados!!!
     if (
       !dados.nome ||
       !dados.funcao ||
@@ -129,7 +166,7 @@ class NavioController {
       });
     }
     navioModel
-      .atualizar(dados, id)
+      .atualizar(dados, inavio)
       .then(() =>
         res.status(200).json({
           type: "success",
@@ -141,24 +178,6 @@ class NavioController {
         res.status(500).json({
           type: "error",
           message: error.message || "Erro ao atualizar Colaborador",
-        });
-      });
-  }
-
-  pilhas(req, res) {
-    navioModel
-      .pilhas()
-      .then((pilhas) => {
-        res.status(200).json({
-          type: "success",
-          data: pilhas,
-        });
-      })
-      .catch((error) => {
-        res.status(500).json({
-          type: "error",
-          message: "Erro ao buscar pilhas",
-          error: error.message,
         });
       });
   }
