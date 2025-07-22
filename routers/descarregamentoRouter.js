@@ -5,10 +5,13 @@ const router = Router();
 router.post("/descarregamento", navioController.adicionar);
 router.get("/descarregamento", navioController.listar);
 router.put("/descarregamento", navioController.previsaoFim);
-
 router.get("/descarregamento/pilhas", navioController.pilhas);
-router.get("/descarregamento/descarregando", navioController.buscar);
-router.get("/descarregamento/:navio", navioController.listarNavio);
-router.put("/descarregamento/:navio", navioController.atualizar);
+router.get("/descarregamento/descarregando", navioController.buscarNavioAtracado);
+router.get("/descarregamento/:navio", navioController.ocorrenciasNavioAtracado);
+router.put("/descarregamento/:navio", navioController.atualizarNavioAtracado);
+router.get("/descarregamento/pareto/operacao/:navio", navioController.paretoOperacao);
+router.get("/descarregamento/pareto/manutencao/:navio", navioController.paretoManutencao);
+router.get("/descarregamento/cascata/eventos/:navio", navioController.cascataEventos);
+router.get("/descarregamento/corretiva/preventiva/:navio", navioController.corretivPreventiva);
 
 module.exports = router;

@@ -10,14 +10,15 @@ class NavioModel {
 
     try {
       const pool = await poolPromise;
-      const result = await pool.request()
-        .input('navio', sql.VarChar, dados.navio)
-        .input('cliente', sql.VarChar, dados.cliente)
-        .input('atracacao1', sql.DateTime, dados.atracacao1)
-        .input('inicio_op', sql.DateTime, dados.inicio_op)
-        .input('arqueacao_inicial', sql.Float, dados.arqueacao_inicial)
-        .input('atracado', sql.Bit, dados.atracado ?? 1)
-        .input('finalizado', sql.Bit, dados.finalizado ?? 0)
+      const result = await pool
+        .request()
+        .input("navio", sql.VarChar, dados.navio)
+        .input("cliente", sql.VarChar, dados.cliente)
+        .input("atracacao1", sql.DateTime, dados.atracacao1)
+        .input("inicio_op", sql.DateTime, dados.inicio_op)
+        .input("arqueacao_inicial", sql.Float, dados.arqueacao_inicial)
+        .input("atracado", sql.Bit, dados.atracado ?? 1)
+        .input("finalizado", sql.Bit, dados.finalizado ?? 0)
         .query(query);
 
       return result;
@@ -30,7 +31,9 @@ class NavioModel {
   async listar() {
     try {
       const pool = await poolPromise;
-      const result = await pool.request().query("SELECT * FROM descarregamento_navios");
+      const result = await pool
+        .request()
+        .query("SELECT * FROM descarregamento_navios");
       return result.recordset;
     } catch (err) {
       console.error("Erro ao listar Navios:", err);
@@ -38,68 +41,64 @@ class NavioModel {
     }
   }
 
- async previsaoFim() {
-  try {
-    const pool = await poolPromise;
-    const navios = await pool.request()
-      .input("finalizado", sql.Bit, 0)
-      .query("SELECT id, atracacao, saldo, taxa FROM descarregamento_navios WHERE finalizado = @finalizado");
+  async previsaoFim() {
+    try {
+      const pool = await poolPromise;
+      const resultado = await pool
+        .request()
+        .input("finalizado", sql.Bit, 0)
+        .query(
+          "SELECT navio, atracacao, saldo, taxa FROM descarregamento_navios WHERE finalizado = @finalizado"
+        );
 
-    for (const navio of navios.recordset) {
+      if (resultado.recordset.length === 0) {
+        return false;
+      }
+
+      const navio = resultado.recordset[0];
       const atracacao = new Date(navio.atracacao);
       const agora = new Date();
-      const diffMs = agora - atracacao;
-      const diffDias = diffMs / (1000 * 60 * 60 * 24); // ms → dias
+      const diferencaMsegundos = agora - atracacao;
+      const diferencaDias = diferencaMsegundos / (1000 * 60 * 60 * 24);
+      const diasCalculado = diferencaDias + navio.saldo / navio.taxa;
 
-      const diasCalculado = diffDias + (navio.saldo / navio.taxa);
-      const diasFinal = Math.round(diasCalculado * 10) / 10;
-console.log(agora)
-      await pool.request()
-        .input("dias", sql.Decimal(3, 1), diasFinal)
-        .input("id", sql.Int, navio.id)
-        .query("UPDATE descarregamento_navios SET dias = @dias WHERE id = @id");
+      await pool
+        .request()
+        .input("dias", sql.Decimal(5, 2), diasCalculado)
+        .input("navio", sql.VarChar, navio.navio)
+        .query(
+          "UPDATE descarregamento_navios SET dias = @dias WHERE navio = @navio"
+        );
+
+      return true;
+    } catch (err) {
+      console.error("Erro ao atualizar previsão:", err);
+      throw err;
     }
-
-    return true;
-
-  } catch (err) {
-    console.error("Erro ao atualizar previsão:", err);
-    throw err;
   }
-}
 
   async pilhas() {
     try {
       const pool = await poolPromise;
-      const result = await pool.request().query(
-        "SELECT * FROM descarregamento_navio_pilha WHERE volume > 0"
-      );
+      const result = await pool
+        .request()
+        .query("SELECT * FROM descarregamento_navio_pilha WHERE volume > 0");
       return result.recordset;
     } catch (err) {
       console.error("Erro ao buscar pilhas:", err);
       throw err;
     }
   }
-  
-  async buscar() {
-    try {
-      const pool = await poolPromise;
-      const result = await pool.request()
-        .input("finalizado", sql.Bit, 0)
-        .query("SELECT * FROM descarregamento_navios WHERE finalizado = @finalizado");
-      return result.recordset;
-    } catch (err) {
-      console.error("Erro ao buscar Navios:", err);
-      throw err;
-    }
-  }
 
-  async listarNavio(id) {
+  async buscarNavioAtracado() {
     try {
       const pool = await poolPromise;
-      const result = await pool.request()
-        .input("navio", sql.VarChar, id)
-        .query("SELECT * FROM descarregamento_navios WHERE navio = @navio");
+      const result = await pool
+        .request()
+        .input("finalizado", sql.Bit, 0)
+        .query(
+          "SELECT * FROM descarregamento_navios WHERE finalizado = @finalizado"
+        );
       return result.recordset;
     } catch (err) {
       console.error("Erro ao buscar Navio:", err);
@@ -107,7 +106,23 @@ console.log(agora)
     }
   }
 
-  async atualizar(dados, id) {
+  async ocorrenciasNavioAtracado(id) {
+    try {
+      const pool = await poolPromise;
+      const result = await pool
+        .request()
+        .input("navio", sql.VarChar, id)
+        .query(
+          "SELECT * FROM descarregamento_ocorrencias WHERE navio = @navio ORDER BY id DESC"
+        );
+      return result.recordset;
+    } catch (err) {
+      console.error("Erro ao buscar Navio:", err);
+      throw err;
+    }
+  }
+
+  async atualizarNavioAtracado(dados, id) {
     const query = `
       UPDATE timepptm
       SET nome = @nome, funcao = @funcao, cargo = @cargo, setor = @setor,
@@ -117,7 +132,8 @@ console.log(agora)
 
     try {
       const pool = await poolPromise;
-      const result = await pool.request()
+      const result = await pool
+        .request()
         .input("nome", sql.VarChar, dados.nome)
         .input("funcao", sql.VarChar, dados.funcao)
         .input("cargo", sql.VarChar, dados.cargo)
@@ -132,6 +148,109 @@ console.log(agora)
       return result;
     } catch (err) {
       console.error("Erro ao atualizar navio:", err);
+      throw err;
+    }
+  }
+
+  async paretoOperacao(id) {
+    try {
+      const pool = await poolPromise;
+      const result = await pool.request().input("navio", sql.VarChar, id)
+        .query(`
+        SELECT 
+          resumo,
+          SUM(tempo) AS tempo_total
+        FROM descarregamento_ocorrencias
+        WHERE 
+          navio = @navio 
+          AND especialidade = 'OPERAÇÃO'
+          AND resumo <> 'DESCARREGANDO'
+        GROUP BY resumo
+        ORDER BY tempo_total DESC
+      `);
+      return result.recordset;
+    } catch (err) {
+      console.error("Erro ao buscar Pareto OPERAÇÃO:", err);
+      throw err;
+    }
+  }
+
+  async paretoManutencao(id) {
+    try {
+      const pool = await poolPromise;
+      const result = await pool.request().input("navio", sql.VarChar, id)
+        .query(`
+        SELECT 
+          resumo,
+          SUM(tempo) AS tempo_total
+        FROM descarregamento_ocorrencias
+        WHERE 
+          navio = @navio
+          AND especialidade IN ('MAN ELÉTRICA', 'MAN MECÂNICA', 'ENGENHARIA')
+        GROUP BY resumo
+        ORDER BY tempo_total DESC
+      `);
+      return result.recordset;
+    } catch (err) {
+      console.error("Erro ao buscar Pareto MANUTENÇÃO:", err);
+      throw err;
+    }
+  }
+
+  async cascataEventos(id) {
+    try {
+      const pool = await poolPromise;
+      const result = await pool.request().input("navio", sql.VarChar, id)
+        .query(`
+        SELECT classificacao, SUM(tempo) AS tempo_total
+        FROM descarregamento_ocorrencias
+        WHERE navio = @navio
+          AND classificacao IN (
+            'CONDIÇÃO CLIMÁTICA',
+            'DESCARREGANDO',
+            'MANUTENÇÃO CORRETIVA',
+            'MANUTENÇÃO PREVENTIVA',
+            'PARADA OPERACIONAL'
+          )
+        GROUP BY classificacao
+      `);
+      return result.recordset;
+    } catch (err) {
+      console.error("Erro ao buscar eventos resumo:", err);
+      throw err;
+    }
+  }
+
+  async corretivPreventiva(id) {
+    try {
+      const pool = await poolPromise;
+      const result = await pool.request().input("navio", sql.VarChar, id)
+        .query(`
+        SELECT sistema, classificacao, SUM(tempo) AS tempo
+        FROM descarregamento_ocorrencias
+        WHERE navio = @navio
+          AND classificacao IN ('MANUTENÇÃO CORRETIVA', 'MANUTENÇÃO PREVENTIVA')
+        GROUP BY sistema, classificacao
+      `);
+
+      const dados = result.recordset;
+
+      const mapa = {};
+
+      dados.forEach(({ sistema, classificacao, tempo }) => {
+        if (!mapa[sistema]) {
+          mapa[sistema] = { nome: sistema, corretiva: 0, preventiva: 0 };
+        }
+        if (classificacao === "MANUTENÇÃO CORRETIVA") {
+          mapa[sistema].corretiva = Number(tempo);
+        } else if (classificacao === "MANUTENÇÃO PREVENTIVA") {
+          mapa[sistema].preventiva = Number(tempo);
+        }
+      });
+
+      return Object.values(mapa);
+    } catch (err) {
+      console.error("Erro ao buscar dados de manutenção:", err);
       throw err;
     }
   }
