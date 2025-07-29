@@ -1,4 +1,4 @@
-const navioModel = require("../models/navioModel");
+const navioModel = require("../models/navio");
 
 class NavioController {
   adicionar(req, res) {
@@ -146,38 +146,64 @@ class NavioController {
       );
   }
 
-  atualizarNavioAtracado(req, res) {
+  buscarOcorrencia(req, res) {
+    const id = req.params.id;
+    navioModel
+      .buscarOcorrencia(id)
+      .then((ocorrencia) => {
+        if (!ocorrencia || ocorrencia.length === 0) {
+          return res.status(200).json({
+            type: "error",
+            message: "Ocorrência não localizada",
+          });
+        }
+
+        res.status(200).json({
+          type: "success",
+          data: ocorrencia,
+        });
+      })
+      .catch((error) =>
+        res.status(500).json({
+          type: "error",
+          message: "Erro ao buscar ocorrência",
+          error: error.message,
+        })
+      );
+  }
+
+  atualizarOcorrenciaSimples(req, res) {
     const { dados } = req.body;
-    const { inavio } = req.params;
-    //atualizar os dados!!!
+    const { id } = req.params;
+
     if (
-      !dados.nome ||
-      !dados.funcao ||
-      !dados.cargo ||
-      !dados.setor ||
-      !dados.equipe ||
-      !dados.gestor ||
-      !dados.email ||
-      !dados.ativo
+      !dados.ocorrencia ||
+      !dados.resumo ||
+      !dados.sistema ||
+      !dados.subsistema ||
+      !dados.classificacao ||
+      !dados.especialidade ||
+      !dados.tipo_desligamento
     ) {
       return res.status(400).json({
         type: "error",
         message: "Dados incompletos!",
       });
     }
+
     navioModel
-      .atualizarNavioAtracado(dados, inavio)
+      .atualizarOcorrenciaSimples(dados, id)
       .then(() =>
         res.status(200).json({
           type: "success",
-          message: "Colaborador atualizado com sucesso",
+          message: "Ocorrência atualizada com sucesso",
         })
       )
       .catch((error) => {
-        console.error("Erro ao atualizar colaborador:", error.message || error);
+        console.error("Erro ao atualizar ocorrência:", error.message || error);
         res.status(500).json({
           type: "error",
-          message: error.message || "Erro ao atualizar Colaborador",
+          message: error.message || "Erro ao atualizar ocorrência",
         });
       });
   }

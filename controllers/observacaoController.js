@@ -1,4 +1,4 @@
-const observacaoModel = require("../models/observacaoModel");
+const observacaoModel = require("../models/observacao");
 
 class ObservacaoController {
   listar(req, res) {

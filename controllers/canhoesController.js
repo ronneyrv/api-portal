@@ -1,4 +1,4 @@
-const canhoesModel = require("../models/canhoesModel");
+const canhoesModel = require("../models/canhoes");
 
 class CanhoesController {
   listar(req, res) {

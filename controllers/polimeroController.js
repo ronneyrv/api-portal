@@ -1,4 +1,4 @@
-const polimeroModel = require("../models/polimeroModel");
+const polimeroModel = require("../models/polimero");
 
 class PolimeroController {
   condicao(req, res) {

@@ -1,4 +1,4 @@
-const userModel = require("../models/userModel");
+const userModel = require("../models/user");
 
 const permissoes = {
   visitante: 10,

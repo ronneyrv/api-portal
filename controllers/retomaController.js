@@ -1,4 +1,4 @@
-const retomaModel = require("../models/retomaModel");
+const retomaModel = require("../models/retoma");
 
 class RetomaController {
   listar(req, res) {

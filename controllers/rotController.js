@@ -1,4 +1,4 @@
-const rotModel = require("../models/rotModel");
+const rotModel = require("../models/rot");
 
 class RotController {
   armazenar(req, res) {

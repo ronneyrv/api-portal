@@ -1,4 +1,4 @@
-const progRetomaModel = require("../models/progRetomaModel");
+const progRetomaModel = require("../models/progRetoma");
 
 class progRetomaController {
   listar(req, res) {

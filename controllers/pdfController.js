@@ -1,4 +1,4 @@
-const pdfModel = require("../models/pdfModel");
+const pdfModel = require("../models/pdf");
 
 class PdfController {
   async gerar(req, res) {

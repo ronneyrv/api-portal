@@ -1,4 +1,4 @@
-const loginModel = require("../models/loginModel");
+const loginModel = require("../models/login");
 
 class LoginController {
   async login(req, res) {

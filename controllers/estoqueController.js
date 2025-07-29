@@ -1,4 +1,4 @@
-const estoqueModel = require("../models/estoqueModel");
+const estoqueModel = require("../models/estoque");
 
 class EstoqueController {
   async listarTodos(req, res) {
