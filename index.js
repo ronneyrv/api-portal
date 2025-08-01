@@ -8,6 +8,8 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 const router = require("./routers");
+const helmet = require('helmet');
+app.use(helmet());
 
 app.use(
   cors({
@@ -27,7 +29,7 @@ app.use(
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: false, // true apenas com HTTPS
+      secure: false, // 'secure: false' é o padrão para HTTP
       maxAge: 1000 * 60 * 60 * 2, // 2 horas
     },
   })
@@ -35,5 +37,5 @@ app.use(
 
 router(app, express);
 app.listen(port, '0.0.0.0', () => {
-  console.log(`Servidor rodando em http://172.20.229.55:${port}`);
+  console.log(`Servidor rodando em http://portalpptm.energiapecem.local:${port}`);
 });

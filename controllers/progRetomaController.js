@@ -29,7 +29,6 @@ class progRetomaController {
 
   add(req, res) {
     const dados = req.body;
-    console.log(dados);
 
     if (!Array.isArray(dados) || dados.length === 0) {
       return res.status(400).json({
