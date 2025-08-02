@@ -122,32 +122,51 @@ class NavioModel {
     }
   }
 
-  async atualizarNavioAtracado(dados, id) {
+  async buscarOcorrencia(id) {
+    try {
+      const pool = await poolPromise;
+      const result = await pool
+        .request()
+        .input("id", sql.Int, id)
+        .query("SELECT * FROM descarregamento_ocorrencias WHERE id = @id");
+      return result.recordset;
+    } catch (err) {
+      console.error("Erro ao buscar ocorrência:", err);
+      throw err;
+    }
+  }
+
+  async atualizarOcorrenciaSimples(dados, id) {
     const query = `
-      UPDATE timepptm
-      SET nome = @nome, funcao = @funcao, cargo = @cargo, setor = @setor,
-          equipe = @equipe, gestor = @gestor, email = @email, ativo = @ativo
-      WHERE id = @id
-    `;
+    UPDATE descarregamento_ocorrencias
+    SET 
+      ocorrencia = @ocorrencia,
+      resumo = @resumo,
+      sistema = @sistema,
+      subsistema = @subsistema,
+      classificacao = @classificacao,
+      especialidade = @especialidade,
+      tipo_desligamento = @tipo_desligamento
+    WHERE id = @id
+  `;
 
     try {
       const pool = await poolPromise;
       const result = await pool
         .request()
-        .input("nome", sql.VarChar, dados.nome)
-        .input("funcao", sql.VarChar, dados.funcao)
-        .input("cargo", sql.VarChar, dados.cargo)
-        .input("setor", sql.VarChar, dados.setor)
-        .input("equipe", sql.VarChar, dados.equipe)
-        .input("gestor", sql.VarChar, dados.gestor)
-        .input("email", sql.VarChar, dados.email)
-        .input("ativo", sql.Bit, dados.ativo)
+        .input("ocorrencia", sql.VarChar, dados.ocorrencia)
+        .input("resumo", sql.VarChar, dados.resumo)
+        .input("sistema", sql.VarChar, dados.sistema)
+        .input("subsistema", sql.VarChar, dados.subsistema)
+        .input("classificacao", sql.VarChar, dados.classificacao)
+        .input("especialidade", sql.VarChar, dados.especialidade)
+        .input("tipo_desligamento", sql.VarChar, dados.tipo_desligamento)
         .input("id", sql.Int, id)
         .query(query);
 
       return result;
     } catch (err) {
-      console.error("Erro ao atualizar navio:", err);
+      console.error("Erro ao atualizar ocorrência:", err);
       throw err;
     }
   }
