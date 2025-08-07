@@ -15,16 +15,16 @@ module.exports = (app, express) => {
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 
-  app.use(routerUsers);
-  app.use(routerEquipe);
-  app.use(routerLogin);
-  app.use(routerRot);
-  app.use(routerPDF);
-  app.use(routerCanhoes);
-  app.use(routerPolimero);
-  app.use(routerObservacao);
-  app.use(routerEstoque);
-  app.use(routerProgRetoma);
-  app.use(routerRetoma);
-  app.use(routerNavio);
+  app.use("/api", routerUsers);
+  app.use("/api", routerEquipe);
+  app.use("/api", routerLogin);
+  app.use("/api", routerRot);
+  app.use("/api", routerPDF);
+  app.use("/api", routerCanhoes);
+  app.use("/api", routerPolimero);
+  app.use("/api", routerObservacao);
+  app.use("/api", routerEstoque);
+  app.use("/api", routerProgRetoma);
+  app.use("/api", routerRetoma);
+  app.use("/api", routerNavio);
 };
