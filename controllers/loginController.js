@@ -19,7 +19,6 @@ class LoginController {
       }
 
       req.session.usuario = {
-        id: resultado.id,
         email: resultado.email,
         usuario: resultado.usuario,
         nivel: resultado.nivel,

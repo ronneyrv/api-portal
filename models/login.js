@@ -22,7 +22,6 @@ class LoginModel {
       }
 
       return {
-        id: user.id,
         email: user.email,
         usuario: user.usuario,
         nivel: user.nivel,
