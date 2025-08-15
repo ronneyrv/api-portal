@@ -2,15 +2,15 @@ const progRetomaModel = require("../models/progRetoma");
 
 class progRetomaController {
   listar(req, res) {
-    const semana = req.params.semana;
+    const { ano, semana } = req.params;
 
     progRetomaModel
-      .listar(semana)
+      .listar(ano, semana)
       .then((programacao) => {
         if (programacao.length === 0) {
           return res.status(200).json({
-            type: "error",
-            message: `Programação Semana ${semana} não definida.`,
+            type: "infor",
+            message: `Programação para a Semana ${semana} do Ano ${ano} não definida.`,
           });
         }
         res.status(200).json({

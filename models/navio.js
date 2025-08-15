@@ -60,7 +60,7 @@ class NavioModel {
       const agora = new Date();
       const diferencaMsegundos = agora - atracacao;
       const diferencaDias = diferencaMsegundos / (1000 * 60 * 60 * 24);
-      const diasCalculado = diferencaDias + navio.saldo / navio.taxa;
+      const diasCalculado = diferencaDias + navio.saldo / (navio.taxa * 24);
 
       await pool
         .request()

@@ -1,13 +1,14 @@
 const { poolPromise, sql } = require("../infraestrutura/conexao");
 
 class ProgRetomaModel {
-  async listar(semana) {
+  async listar(ano, semana) {
     try {
       const pool = await poolPromise;
       const result = await pool
         .request()
-        .input("semana", sql.VarChar, semana)
-        .query("SELECT * FROM progRetoma WHERE semana = @semana");
+        .input("ano", sql.Int, ano)
+        .input("semana", sql.Int, semana)
+        .query("SELECT * FROM progRetoma WHERE ano = @ano AND semana = @semana");
 
       return result.recordset;
     } catch (err) {

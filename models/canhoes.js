@@ -17,7 +17,7 @@ class canhoesModel {
       const pool = await poolPromise;
       const result = await pool.request()
         .input("modo", sql.VarChar, modo)
-        .input("can", sql.Int, can)
+        .input("can", sql.VarChar, can)
         .query("UPDATE canhoes SET modo = @modo WHERE can = @can");
       return result;
     } catch (err) {
@@ -41,7 +41,7 @@ class canhoesModel {
     try {
       const pool = await poolPromise;
       const result = await pool.request()
-        .input("disponivel", sql.Int, disponivel)
+        .input("disponivel", sql.VarChar, disponivel)
         .query("UPDATE statusHumectacao SET disponivel = @disponivel");
       return result;
     } catch (err) {
