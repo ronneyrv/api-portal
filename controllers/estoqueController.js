@@ -6,7 +6,13 @@ class EstoqueController {
       const valores = await estoqueModel.buscarTodos();
       res.status(200).json({ type: "success", data: valores });
     } catch (error) {
-      res.status(500).json({ type: "error", message: "Erro ao buscar estoque", error: error.message });
+      res
+        .status(500)
+        .json({
+          type: "error",
+          message: "Erro ao buscar estoque",
+          error: error.message,
+        });
     }
   }
 
@@ -15,7 +21,13 @@ class EstoqueController {
       const valores = await estoqueModel.buscarDiario();
       res.status(200).json({ type: "success", data: valores });
     } catch (error) {
-      res.status(500).json({ type: "error", message: "Erro ao buscar estoque", error: error.message });
+      res
+        .status(500)
+        .json({
+          type: "error",
+          message: "Erro ao buscar estoque",
+          error: error.message,
+        });
     }
   }
 
@@ -24,7 +36,28 @@ class EstoqueController {
       const valores = await estoqueModel.buscarRealizado();
       res.status(200).json({ type: "success", data: valores });
     } catch (error) {
-      res.status(500).json({ type: "error", message: "Erro ao buscar estoque", error: error.message });
+      res
+        .status(500)
+        .json({
+          type: "error",
+          message: "Erro ao buscar estoque",
+          error: error.message,
+        });
+    }
+  }
+
+  async listarPorPilha(req, res) {
+    try {
+      const valores = await estoqueModel.listarPorPilha();
+      res.status(200).json({ type: "success", data: valores });
+    } catch (error) {
+      res
+        .status(500)
+        .json({
+          type: "error",
+          message: "Erro ao buscar estoque por pilha",
+          error: error.message,
+        });
     }
   }
 
@@ -35,10 +68,22 @@ class EstoqueController {
         const valores = await estoqueModel.buscarUltimo();
         res.status(200).json({ type: "success", data: valores });
       } else {
-        res.status(400).json({ type: "error", message: "ID inválido. Use /estoque para todos ou /estoque/1 para o último." });
+        res
+          .status(400)
+          .json({
+            type: "error",
+            message:
+              "ID inválido. Use /estoque para todos ou /estoque/1 para o último.",
+          });
       }
     } catch (error) {
-      res.status(500).json({ type: "error", message: "Erro ao buscar estoque", error: error.message });
+      res
+        .status(500)
+        .json({
+          type: "error",
+          message: "Erro ao buscar estoque",
+          error: error.message,
+        });
     }
   }
 }
