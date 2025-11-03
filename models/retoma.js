@@ -62,21 +62,20 @@ class RetomaModel {
   }
 
   async atualizar(id, dados) {
-  try {
-    const pool = await poolPromise;
-    const result = await pool
-      .request()
-      .input("id", sql.Int, id)
-      .input("ug", sql.VarChar, dados.ug)
-      .input("maquina", sql.VarChar, dados.maquina)
-      .input("pilha", sql.VarChar, dados.pilha)
-      .input("inicio", sql.DateTime, dados.inicio)
-      .input("fim", sql.DateTime, dados.fim)
-      .input("volume", sql.Float, dados.volume)
-      .input("especialidade", sql.VarChar, dados.especialidade || 'OPERAÇÃO')
-      .input("classificacao", sql.VarChar, dados.classificacao)
-      .input("observacao", sql.VarChar, dados.observacao)
-      .query(`
+    try {
+      const pool = await poolPromise;
+      const result = await pool
+        .request()
+        .input("id", sql.Int, id)
+        .input("ug", sql.VarChar, dados.ug)
+        .input("maquina", sql.VarChar, dados.maquina)
+        .input("pilha", sql.VarChar, dados.pilha)
+        .input("inicio", sql.DateTime, dados.inicio)
+        .input("fim", sql.DateTime, dados.fim)
+        .input("volume", sql.Float, dados.volume)
+        .input("especialidade", sql.VarChar, dados.especialidade || "OPERAÇÃO")
+        .input("classificacao", sql.VarChar, dados.classificacao)
+        .input("observacao", sql.VarChar, dados.observacao).query(`
         UPDATE retoma_realizada
         SET 
           ug = @ug, 
@@ -91,12 +90,12 @@ class RetomaModel {
         WHERE id = @id
       `);
 
-    return result;
-  } catch (err) {
-    console.error(`Erro ao atualizar o registro:`, err);
-    throw err;
+      return result;
+    } catch (err) {
+      console.error(`Erro ao atualizar o registro:`, err);
+      throw err;
+    }
   }
-}
 
   async deletar(id) {
     try {
