@@ -72,6 +72,48 @@ class RetomaController {
     }
   }
 
+  async listarMetaTaxa(req, res) {
+    try {
+      const config = await retomaModel.listarMetaTaxa();
+      res.status(200).json({
+        type: "success",
+        data: config,
+      });
+    } catch (error) {
+      res.status(500).json({
+        type: "error",
+        message: "Erro ao buscar metas da taxa",
+        error: error.message,
+      });
+    }
+  }
+
+  async listarTaxa(req, res) {
+    const { ano } = req.params;
+
+    if (!ano) {
+      return res.status(200).json({
+        type: "error",
+        message: "Erro no Ano da Taxa",
+      });
+    }
+
+    try {
+      const taxa = await retomaModel.listarTaxa(ano);
+
+      res.status(200).json({
+        type: "success",
+        data: taxa,
+      });
+    } catch (error) {
+      res.status(500).json({
+        type: "error",
+        message: `Erro ao atualizar`,
+        error: error.message,
+      });
+    }
+  }
+
   async adicionar(req, res) {
     const { dados } = req.body;
 
@@ -84,6 +126,11 @@ class RetomaController {
     dados.inicio = converterParaUTC(dados.inicio);
     dados.fim = converterParaUTC(dados.fim);
     dados.volume = converterParaNumeroSQL(dados.volume);
+
+    if (dados.classificacao === "RETOMA") {
+      await retomaModel.decrementoNavioPilha(dados);
+    }
+
     try {
       await retomaModel.adicionar(dados);
       return res.status(200).json({
@@ -104,16 +151,18 @@ class RetomaController {
     const { dados } = req.body;
 
     if (!dados) {
-      return res
-        .status(200)
-        .json({
-          type: "error",
-          message:
-            "Erro nos dados para atualização!",
-        });
+      return res.status(200).json({
+        type: "error",
+        message: "Erro nos dados para atualização!",
+      });
     }
-
+    dados.inicio = converterParaUTC(dados.inicio);
+    dados.fim = converterParaUTC(dados.fim);
     dados.volume = converterParaNumeroSQL(dados.volume);
+
+    if (dados.classificacao === "RETOMA") {
+      await retomaModel.updateEstoqueNavioPilha(dados);
+    }
 
     try {
       const result = await retomaModel.atualizar(id, dados);
@@ -138,6 +187,24 @@ class RetomaController {
     }
   }
 
+  async atualizarMetaTaxa(req, res) {
+    const { dados } = req.body;
+    try {
+      await retomaModel.atualizarMetaTaxa(dados);
+      return res.status(200).json({
+        type: "success",
+        message: "Metas da Taxa de Retoma atualizadas com sucesso.",
+      });
+    } catch (error) {
+      console.error("Erro ao atualizar:", error);
+      res.status(500).json({
+        type: "error",
+        message: "Erro ao atualizar a Metas da Taxa.",
+        error: error.message,
+      });
+    }
+  }
+
   async deletar(req, res) {
     const { id } = req.params;
 
@@ -146,6 +213,8 @@ class RetomaController {
         .status(400)
         .json({ type: "error", message: "ID inválido ou não fornecido." });
     }
+
+    await retomaModel.deleteEstoqueNavioPilha(id);
 
     try {
       const result = await retomaModel.deletar(id);
