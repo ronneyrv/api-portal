@@ -1,10 +1,24 @@
 const navioModel = require("../models/navio");
 
 const converterParaNumeroSQL = (valor) => {
+  // if (valor === null || valor === undefined || valor.toString().trim() === "") {
+  //   return null;
+  // }
+  // const valorLimpo = valor.toString().replace(/\./g, "").replace(",", ".");
+  // return parseFloat(valorLimpo);
+
+
   if (valor === null || valor === undefined || valor.toString().trim() === "") {
     return null;
   }
-  const valorLimpo = valor.toString().replace(/\./g, "").replace(",", ".");
+  
+  // 1. Converte para string e remove TODOS os pontos de milhar com o REGEX global /g
+  const semSeparadorMilhar = valor.toString().replace(/\./g, "");
+  
+  // 2. Substitui a VÍRGULA decimal pelo PONTO decimal
+  const valorLimpo = semSeparadorMilhar.replace(",", ".");
+  
+  // 3. Converte para número float
   return parseFloat(valorLimpo);
 };
 
@@ -218,8 +232,6 @@ class NavioController {
       });
     }
 
-    dados.arqueado = converterParaNumeroSQL(dados.arqueado);
-
     if (dados.arqueado <= dados.descarregado) {
       return res.status(200).json({
         type: "error",
@@ -257,6 +269,19 @@ class NavioController {
         dados.arqueacao -
         (dados.descarregado + diferenca)
       ).toFixed(3);
+    }
+    if (dados.tipoArqueacao === "00") {
+      if (
+        dados.pilha === "1A" ||
+        dados.pilha === "1B" ||
+        dados.pilha === "2A"
+      ) {
+        dados.cliente = "ENEVA";
+      } else {
+        dados.cliente = "ENERGIA PECÉM";
+      }
+
+      await navioModel.incrementoNavioPilha(dados);
     }
 
     try {

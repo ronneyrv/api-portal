@@ -167,6 +167,57 @@ class NavioModel {
     }
   }
 
+  async incrementoNavioPilha(dados) {
+    try {
+      const pool = await poolPromise;
+      const { navio, pilha, valorFinalDia, cliente } = dados;
+
+      const search = await pool
+        .request()
+        .input("navio", sql.VarChar, navio)
+        .input("pilha", sql.VarChar, pilha).query(`
+        SELECT * FROM 
+          descarregamento_navio_pilha
+        WHERE
+          navio = @navio
+        AND
+          pilha = @pilha;
+      `);
+
+      if (search.recordset.length === 0) {
+        await pool
+          .request()
+          .input("navio", sql.VarChar, navio)
+          .input("pilha", sql.VarChar, pilha)
+          .input("cliente", sql.VarChar, cliente)
+          .input("valorFinalDia", sql.Decimal(10, 3), valorFinalDia).query(`
+          INSERT INTO descarregamento_navio_pilha (navio, pilha, volume, cliente)
+          VALUES (@navio, @pilha, @valorFinalDia, @cliente);
+        `);
+      } else {
+        await pool
+          .request()
+          .input("navio", sql.VarChar, navio)
+          .input("pilha", sql.VarChar, pilha)
+          .input("cliente", sql.VarChar, cliente)
+          .input("valorFinalDia", sql.Decimal(9, 2), valorFinalDia).query(`
+        UPDATE descarregamento_navio_pilha
+        SET
+          volume = volume + @valorFinalDia
+        WHERE
+          navio = @navio
+        AND
+          pilha = @pilha;
+      `);
+      }
+
+      return true;
+    } catch (err) {
+      console.error("Erro ao atualizar estoque por pilha:", err);
+      throw err;
+    }
+  }
+
   async atualizaArqueacao(dados) {
     try {
       const pool = await poolPromise;
