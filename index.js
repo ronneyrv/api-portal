@@ -4,6 +4,7 @@ const session = require("express-session");
 const cors = require("cors");
 require("dotenv").config();
 
+const { iniciarAgendamento } = require('./dailyReport');
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -38,4 +39,5 @@ app.use(
 router(app, express);
 app.listen(port, '0.0.0.0', () => {
   console.log(`Servidor rodando em http://portalpptm.energiapecem.local:${port}`);
+  iniciarAgendamento();
 });
