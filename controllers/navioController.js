@@ -1,24 +1,13 @@
 const navioModel = require("../models/navio");
 
 const converterParaNumeroSQL = (valor) => {
-  // if (valor === null || valor === undefined || valor.toString().trim() === "") {
-  //   return null;
-  // }
-  // const valorLimpo = valor.toString().replace(/\./g, "").replace(",", ".");
-  // return parseFloat(valorLimpo);
-
-
   if (valor === null || valor === undefined || valor.toString().trim() === "") {
     return null;
   }
   
-  // 1. Converte para string e remove TODOS os pontos de milhar com o REGEX global /g
   const semSeparadorMilhar = valor.toString().replace(/\./g, "");
-  
-  // 2. Substitui a VÍRGULA decimal pelo PONTO decimal
   const valorLimpo = semSeparadorMilhar.replace(",", ".");
-  
-  // 3. Converte para número float
+
   return parseFloat(valorLimpo);
 };
 
