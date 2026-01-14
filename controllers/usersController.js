@@ -1,22 +1,11 @@
 const userModel = require("../models/user");
 
-const permissoes = {
-  visitante: 10,
-  manutencao: 9,
-  operacao: 7,
-  supervisao: 6,
-  analistico: 5,
-  gerencia: 3,
-  desenvolvedor: 2,
-  admin: 1,
-};
-
 class UsersController {
   async criar(req, res) {
     const newUser = req.body;
     try {
       if (!newUser.usuario || !newUser.email || !newUser.senha) {
-        return res.status(400).json({
+        return res.status(200).json({
           type: "warning",
           message: "Preencha todos os campos",
         });
@@ -27,72 +16,82 @@ class UsersController {
         .json({ type: "success", message: "Usuário cadastrado com sucesso!" });
     } catch (error) {
       console.error("Erro ao criar usuário:", error.message || error);
-      res.status(400).json({
+      res.status(200).json({
         type: "error",
         message: error.message || "Erro ao criar usuário",
       });
     }
   }
 
-  buscar(req, res) {
-    userModel
-      .listar()
-      .then((users) =>
-        res.status(200).json({
-          type: "success",
-          data: users,
-        })
-      )
-      .catch((error) =>
-        res
-          .status(404)
-          .json({ type: "error", message: "Erro ao buscar usuários" })
-      );
+  async buscar(req, res) {
+    try {
+      const users = await userModel.listar();
+
+      res.status(200).json({
+        type: "success",
+        data: users,
+      });
+    } catch (error) {
+      console.error("Erro ao buscar usuários:", error.message || error);
+
+      res.status(200).json({
+        type: "error",
+        message: "Erro ao buscar usuários",
+      });
+    }
   }
 
   async atualizar(req, res) {
-    const body = req.body;
-
+    const {dados} = req.body;
+    const mapaPermissoes = {
+      10: "VISITANTE",
+      9: "MANUTENÇÃO",
+      7: "OPERAÇÃO",
+      6: "SUPERVISÃO",
+      5: "ANALÍTICO",
+      3: "GERÊNCIA",
+      2: "DESENVOLVEDOR",
+      1: "ADMIN",
+    };
+    
     try {
-      if (!body.email) {
-        return res.status(400).json({
+      if (!dados.email) {
+        return res.status(200).json({
           type: "error",
-          message: "O e-mail é obrigatórios!",
+          message: "E-mail obrigatórios",
         });
       }
 
-      if (body.senha) {
-        if (body.senha.length < 6) {
-          return res.status(400).json({
+      if (dados.senha) {
+        if (dados.senha.length < 6) {
+          return res.status(200).json({
             type: "error",
             message: "Senha com menos de 6 caracteres!",
           });
         }
-      }
-
-      if (body.permissao) {
-        const nivel = permissoes[body.permissao.toLowerCase()];
-
-        if (!nivel) {
-          return res.status(400).json({
+        if (dados.senha !== dados.senha2) {
+          return res.status(200).json({
             type: "error",
-            message: "Permissão não localizada!",
+            message: "As senhas não coincidem!",
           });
         }
-
-        body.nivel = nivel;
       }
 
-      const { feedback } = await userModel.atualizar(body);
+      if (dados.nivel && mapaPermissoes[dados.nivel]) {
+        dados.permissao = mapaPermissoes[dados.nivel];
+        dados.nivel = parseInt(dados.nivel, 10);
+      }
+
+      const { feedback } = await userModel.atualizar(dados);
       res.status(200).json({
         type: "success",
         message: feedback || "Usuário atualizado com sucesso!",
       });
     } catch (error) {
-      console.error("Erro ao atualizar usuário:", error.message || error);
-      res.status(400).json({
+      res.status(500).json({
         type: "error",
-        message: error.message || "Erro ao atualizar usuário",
+        message: "Erro ao atualizar",
+        error: error.message,
       });
     }
   }
@@ -106,7 +105,7 @@ class UsersController {
         .json({ type: "success", message: "Usuário excluído com sucesso!" });
     } catch (error) {
       console.error("Erro ao excluir usuário:", error.message || error);
-      res.status(400).json({
+      res.status(200).json({
         type: "error",
         message: error.message || "Erro ao excluir usuário",
       });
