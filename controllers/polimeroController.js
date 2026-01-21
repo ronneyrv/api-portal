@@ -82,12 +82,35 @@ class PolimeroController {
       );
   }
 
+  async pilhaVazia(req, res) {
+    try {
+      const pilhas = await polimeroModel.pilhaVazia();
+
+      res.status(200).json({
+        type: "success",
+        data: pilhas,
+      });
+    } catch (error) {
+      res.status(500).json({
+        type: "error",
+        message: "Erro ao buscar pilhas",
+        error: error.message,
+      });
+    }
+  }
+
   async adicionar(req, res) {
     const { dados } = req.body;
 
-    if (!dados.data || !dados.tipo || !dados.volume || !dados.pilha || !dados.responsavel) {
+    if (
+      !dados.data ||
+      !dados.tipo ||
+      !dados.volume ||
+      !dados.pilha ||
+      !dados.responsavel
+    ) {
       return res
-        .status(400)
+        .status(200)
         .json({ type: "error", message: "Dados obrigatórios faltando!" });
     }
 
@@ -98,7 +121,7 @@ class PolimeroController {
     const cliente = getCliente(dados.pilha);
     if (!cliente) {
       return res
-        .status(400)
+        .status(200)
         .json({ type: "error", message: "Pilha inválida fornecida." });
     }
 
@@ -136,24 +159,20 @@ class PolimeroController {
 
     const clienteNovo = getCliente(dados.pilha);
     if (!clienteNovo) {
-      return res
-        .status(200)
-        .json({
-          type: "error",
-          message: "Pilha fornecida na atualização inválida.",
-        });
+      return res.status(200).json({
+        type: "error",
+        message: "Pilha fornecida na atualização inválida.",
+      });
     }
 
     try {
       const registroAntigo = await polimeroModel.buscarPorId(id);
 
       if (!registroAntigo) {
-        return res
-          .status(200)
-          .json({
-            type: "error",
-            message: `Registro ID não encontrado para atualização.`,
-          });
+        return res.status(200).json({
+          type: "error",
+          message: `Registro ID não encontrado para atualização.`,
+        });
       }
 
       const clienteAntigo = getCliente(registroAntigo.pilha);
@@ -173,17 +192,42 @@ class PolimeroController {
       );
 
       if (result && result.rowsAffected && result.rowsAffected[0] === 0) {
-        return res
-          .status(404)
-          .json({
-            type: "error",
-            message: `Registro ID ${id} não afetado. Verifique o ID.`,
-          });
+        return res.status(404).json({
+          type: "error",
+          message: `Registro ID ${id} não afetado. Verifique o ID.`,
+        });
       }
 
       return res.status(200).json({
         type: "success",
         message: `Registro atualizado com sucesso. Estoque compensado.`,
+      });
+    } catch (error) {
+      console.error("Erro no controller atualizar:", error);
+      res.status(500).json({
+        type: "error",
+        message: `Erro ao atualizar. Transação desfeita.`,
+        error: error.message,
+      });
+    }
+  }
+
+  async atualizaPilhaVazia(req, res) {
+    const { pilha } = req.params;
+
+    if (!pilha) {
+      return res.status(200).json({
+        type: "error",
+        message: "Pilha para atualização ausente",
+      });
+    }
+
+    try {
+      await polimeroModel.atualizaPilhaVazia(pilha);
+
+      return res.status(200).json({
+        type: "success",
+        message: `Pilha ${pilha} zerada com sucesso`,
       });
     } catch (error) {
       console.error("Erro no controller atualizar:", error);

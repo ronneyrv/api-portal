@@ -57,6 +57,20 @@ class PolimeroModel {
     }
   }
 
+  async pilhaVazia() {
+    try {
+      const pool = await poolPromise;
+      const result = await pool.request().query(`
+        SELECT * FROM polimero_status;
+      `);
+
+      return result.recordset;
+    } catch (err) {
+      console.error("Erro ao buscar pilhas:", err);
+      throw err;
+    }
+  }
+
   async adicionarComTransacao(dados, cliente) {
     const pool = await poolPromise;
     const transaction = new sql.Transaction(pool);
@@ -189,6 +203,23 @@ class PolimeroModel {
       throw new Error(`Transação de atualização falhou: ${err.message}`);
     }
   }
+
+    async atualizaPilhaVazia(pilha) {
+    try {
+      const pool = await poolPromise;
+      const result = await pool
+        .request()
+        .input("pilha", sql.VarChar, pilha).query(`
+          UPDATE polimero_status SET data = null WHERE pilha = @pilha
+        `);
+
+      return result;
+    } catch (err) {
+      console.error("Erro ao zerar pilha:", err);
+      throw err;
+    }
+  }
+
 }
 
 module.exports = new PolimeroModel();
