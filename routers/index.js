@@ -11,6 +11,7 @@ const routerProgRetoma = require("./progRetomaRouter");
 const routerRetoma = require("./retomaRouter");
 const routerNavio = require("./descarregamentoRouter");
 const routerContrato = require("./contratoRouter");
+const routerTop = require("./topRouter");
 
 module.exports = (app, express) => {
   app.use(express.json());
@@ -29,4 +30,5 @@ module.exports = (app, express) => {
   app.use("/api", routerRetoma);
   app.use("/api", routerNavio);
   app.use("/api", routerContrato);
+  app.use("/api", routerTop);
 };
