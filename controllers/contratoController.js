@@ -201,7 +201,7 @@ class ContratoController {
       !dados.valor_contrato
     ) {
       return res
-        .status(400)
+        .status(200)
         .json({ type: "error", message: "Há campos não definidos!" });
     }
 

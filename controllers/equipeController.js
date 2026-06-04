@@ -1,7 +1,7 @@
 const equipeModel = require("../models/equipe");
 
 class EquipeController {
-  criar(req, res) {
+  async criar(req, res) {
     const { dados } = req.body;
     if (
       !dados.nome ||
@@ -10,53 +10,50 @@ class EquipeController {
       !dados.setor ||
       !dados.equipe ||
       !dados.gestor ||
-      !dados.email ||
-      !dados.ativo
+      !dados.email
     ) {
-      return res.status(400).json({
+      return res.status(200).json({
         type: "error",
         message: "Dados incompletos!",
       });
     }
 
-    equipeModel
-      .criar(dados)
-      .then((res) =>
-        res.status(200).json({
-          type: "success",
-          message: "Colaborador adicionado com sucesso",
-        })
-      )
-      .catch((error) =>
-        res.status(500).json({
-          type: "error",
-          message: "Erro ao adicionar colaborador",
-          error: error.message,
-        })
-      );
+    try {
+      await equipeModel.criar(dados);
+      return res.status(200).json({
+        type: "success",
+        message: "Colaborador adicionado com sucesso",
+      });
+    } catch (error) {
+      res.status(500).json({
+        type: "error",
+        message: "Erro ao adicionar colaborador",
+        error: error.message,
+      });
+    }
   }
 
-  listar(req, res) {
-    equipeModel
-      .listar()
-      .then((equipe) =>
-        res.status(200).json({
-          type: "success",
-          data: equipe,
-        })
-      )
-      .catch((error) =>
-        res.status(500).json({
-          type: "error",
-          message: "Erro ao buscar equipe",
-          error: error.message,
-        })
-      );
+  async listar(req, res) {
+    try {
+      const lista = await equipeModel.listar();
+
+      res.status(200).json({
+        type: "success",
+        data: lista,
+      });
+    } catch (error) {
+      res.status(500).json({
+        type: "error",
+        message: "Erro ao buscar equipe",
+        error: error.message,
+      });
+    }
   }
 
-  atualizar(req, res) {
+  async atualizar(req, res) {
     const { dados } = req.body;
     const { id } = req.params;
+
     if (
       !dados.nome ||
       !dados.funcao ||
@@ -64,29 +61,46 @@ class EquipeController {
       !dados.setor ||
       !dados.equipe ||
       !dados.gestor ||
-      !dados.email ||
-      !dados.ativo
+      !dados.email
     ) {
-      return res.status(400).json({
+      return res.status(200).json({
         type: "error",
-        message: "Dados incompletos!",
+        message: "Dados incompletos para atualizar colaborador.",
       });
     }
-    equipeModel
-      .atualizar(dados, id)
-      .then(() =>
-        res.status(200).json({
-          type: "success",
-          message: "Colaborador atualizado com sucesso",
-        })
-      )
-      .catch((error) => {
-        console.error("Erro ao atualizar colaborador:", error.message || error);
-        res.status(500).json({
-          type: "error",
-          message: error.message || "Erro ao atualizar Colaborador",
-        });
+
+    try {
+      await equipeModel.atualizar(dados, id);
+
+      return res.status(200).json({
+        type: "success",
+        message: `Colaborador atualizado com sucesso`,
       });
+    } catch (error) {
+      res.status(500).json({
+        type: "error",
+        message: `Erro ao atualizar colaborador`,
+        error: error.message,
+      });
+    }
+  }
+
+  async deletar(req, res) {
+    const { id } = req.params;
+    try {
+      await equipeModel.deletar(id);
+
+      return res.status(200).json({
+        type: "success",
+        message: `Colaborador excluído com sucesso`,
+      });
+    } catch (error) {
+      res.status(500).json({
+        type: "error",
+        message: `Erro ao excluir colaborador`,
+        error: error.message,
+      });
+    }
   }
 }
 

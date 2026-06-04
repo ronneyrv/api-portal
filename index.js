@@ -38,6 +38,6 @@ app.use(
 
 router(app, express);
 app.listen(port, '0.0.0.0', () => {
-  console.log(`Servidor rodando em http://portalpptm.energiapecem.local:${port}`);
+  console.log(`Servidor rodando em http://172.20.229.55:${port}`);
   iniciarAgendamento();
 });

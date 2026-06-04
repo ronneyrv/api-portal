@@ -1,12 +1,11 @@
 const { poolPromise, sql } = require("../infraestrutura/conexao");
 
 class RetomaModel {
-  async listarTudo() {
+  async listarTudo(ano) {
     try {
       const pool = await poolPromise;
-      const result = await pool
-        .request()
-        .query("SELECT * FROM retoma_realizada ORDER BY inicio ASC");
+      const result = await pool.request().input("ano", sql.VarChar, ano)
+        .query("SELECT * FROM retoma_realizada WHERE DATEPART(YEAR, [data]) = @ano ORDER BY inicio ASC");
 
       return result.recordset;
     } catch (err) {
@@ -31,31 +30,33 @@ class RetomaModel {
     try {
       const pool = await poolPromise;
       const result = await pool.request().input("ano", sql.VarChar, ano).query(`
-            SELECT
-                m.mes,
-                ISNULL(c.taxa, 0) AS taxa
-            FROM
-                (
-                    VALUES (1), (2), (3), (4), (5), (6), (7), (8), (9), (10), (11), (12)
-                ) AS m(mes)
-            LEFT JOIN
-                (
-                    SELECT
-                        DATEPART(MONTH, [data]) AS mes,
-                        CAST(
-                            (SUM(volume) * 1.0 / NULLIF(SUM(DATEDIFF(MINUTE, inicio, fim)), 0)) * 60
-                        AS INT) AS taxa
-                    FROM
-                        retoma_realizada
-                    WHERE
-                        DATEPART(YEAR, [data]) = @ano
-                        AND classificacao = 'RETOMA'
-                    GROUP BY
-                        DATEPART(MONTH, [data])
-                ) AS c ON m.mes = c.mes
-            ORDER BY
-                m.mes;
-        `);
+        SELECT
+          m.mes,
+          ISNULL(c.taxa, 0) AS taxa
+        FROM
+          (
+              VALUES (1), (2), (3), (4), (5), (6), (7), (8), (9), (10), (11), (12)
+          ) AS m(mes)
+        LEFT JOIN
+          (
+              SELECT
+                  DATEPART(MONTH, [data]) AS mes,
+                  CAST(
+                      (SUM(CASE WHEN classificacao = 'RETOMA' THEN volume ELSE 0 END) * 1.0 
+                      / 
+                      NULLIF(SUM(DATEDIFF(MINUTE, inicio, fim)), 0)) * 60
+                  AS INT) AS taxa
+              FROM
+                  retoma_realizada
+              WHERE
+                  DATEPART(YEAR, [data]) = @ano
+                  AND classificacao IN ('RETOMA', 'DESL. AUTOMÁTICO', 'MAN. CORRETIVA', 'MUDANÇA DE PILHA')
+              GROUP BY
+                  DATEPART(MONTH, [data])
+          ) AS c ON m.mes = c.mes
+        ORDER BY
+          m.mes;
+      `);
 
       return result.recordset;
     } catch (err) {
@@ -72,7 +73,7 @@ class RetomaModel {
         .input("data", sql.Date, data)
         .input("turno", sql.VarChar, turno)
         .query(
-          "SELECT * FROM retoma_realizada WHERE data = @data AND turno = @turno ORDER BY inicio ASC"
+          "SELECT * FROM retoma_realizada WHERE data = @data AND turno = @turno ORDER BY inicio ASC",
         );
 
       return result.recordset;

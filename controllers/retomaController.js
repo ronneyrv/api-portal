@@ -24,8 +24,9 @@ const converterParaUTC = (valor) => {
 
 class RetomaController {
   async listar(req, res) {
+    const { ano } = req.params;
     try {
-      const lista = await retomaModel.listarTudo();
+      const lista = await retomaModel.listarTudo(ano);
 
       res.status(200).json({
         type: "success",

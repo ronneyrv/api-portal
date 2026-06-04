@@ -22,11 +22,11 @@ class UserModel {
         .input("usuario", sql.VarChar, newUser.usuario)
         .input("email", sql.VarChar, newUser.email)
         .input("senha", sql.VarChar, hashedSenha)
-        .input("permissao", sql.VarChar, newUser.permissao || "visitante")
+        .input("permissao", sql.VarChar, newUser.permissao || "VISITANTE")
         .input("nivel", sql.Int, newUser.nivel || 10)
         .input("ativo", sql.Bit, 1)
         .query(
-          "INSERT INTO users (usuario, email, senha, permissao, nivel) VALUES (@usuario, @email, @senha, @permissao, @nivel, @ativo)"
+          "INSERT INTO users (usuario, email, senha, permissao, nivel, ativo) VALUES (@usuario, @email, @senha, @permissao, @nivel, @ativo)"
         );
     } catch (err) {
       console.error("Erro ao criar usuário:", err);
